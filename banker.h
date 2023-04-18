@@ -16,11 +16,17 @@ public:
     int request_resources(string command);
     int release_resources(string command);
     string getBankInfo();
+    enum SafetyStatus
+    {
+        UNSAFE = -1,
+        SAFE = 0,
+        SEMISAFE = 1
+    };
 
 private:
     vector<vector<string>> read_csv(string filename);
     vector<int> splitCommand(string command);
-    bool safetyCheck(vector<int> process);
+    Banker::SafetyStatus safetyCheck(vector<int> process);
     /* the available amount of each resource */
     int available[NUMBER_OF_RESOURCES];
     /*the maximum demand of each customer */

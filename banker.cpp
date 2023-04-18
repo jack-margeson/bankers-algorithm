@@ -132,9 +132,17 @@ int Banker::request_resources(string command)
     // Handle request, check for validity.
     try
     {
-        if (safetyCheck(process))
+        switch (safetyCheck(process))
         {
+        case SAFE:
             cout << "safe. modified\n";
+            break;
+        case SEMISAFE:
+            cout << "semi-safe. added to need\n";
+            break;
+        default:
+            throw invalid_argument("An error has occured.");
+            break;
         }
     }
     catch (invalid_argument &e)
@@ -168,14 +176,36 @@ vector<int> Banker::splitCommand(string command)
     return vecCommand;
 }
 
-bool Banker::safetyCheck(vector<int> process)
+Banker::SafetyStatus Banker::safetyCheck(vector<int> process)
 {
-    bool safe = true;
+    Banker::SafetyStatus safe = SAFE;
 
-    if (!safe)
+    int customer = process[0];
+    process.erase(process.begin());
+
+    for (int i = 0; i < NUMBER_OF_RESOURCES; i++)
     {
-        throw invalid_argument("The request/release operation does not pass the safety check.");
+        // Check if the request is less than the available amount of the resource.
+        if (process[i] > available[i])
+        {
+            // This sort of request will never be safe.
+            safe = UNSAFE;
+        }
+        // Check if the request in addition to the current allocation
+        // is less than the maximum demand from the customer.
+        if (process[i] + allocation[customer][i] > maximum[customer][i])
+        {
+            // This sort of request could be safe, if the current allocation
+            // to the customer were to be freed. We'll mark this as "semisafe"
+            // and let the caller determine what should be done with the request
+            // (adding to the need array).
+            safe = SEMISAFE;
+        }
     }
 
+    if (safe = UNSAFE)
+    {
+        throw invalid_argument("The request/release operation specified will never pass the safety check.");
+    }
     return safe;
 }
