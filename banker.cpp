@@ -36,7 +36,6 @@ Banker::Banker(int argc, char *args[], string filename)
             need[i][j] = 0;
         }
     }
-
 }
 
 vector<vector<string>> Banker::read_csv(string filename)
@@ -115,4 +114,68 @@ string Banker::getBankInfo()
     }
 
     return s;
+}
+
+int Banker::request_resources(string command)
+{
+    // Format and check request.
+    vector<int> process;
+    try
+    {
+        process = splitCommand(command);
+    }
+    catch (invalid_argument &e)
+    {
+        throw e;
+        return -1;
+    }
+    // Handle request, check for validity.
+    try
+    {
+        if (safetyCheck(process))
+        {
+            cout << "safe. modified\n";
+        }
+    }
+    catch (invalid_argument &e)
+    {
+        throw e;
+        return -1;
+    }
+
+    return 0;
+}
+
+vector<int> Banker::splitCommand(string command)
+{
+    istringstream iss(command);
+    vector<int> vecCommand;
+
+    char c;
+    iss >> c >> c;
+
+    int num;
+    while (iss >> num)
+    {
+        vecCommand.push_back(num);
+    }
+
+    if (vecCommand.size() != (NUMBER_OF_RESOURCES + 1))
+    {
+        throw invalid_argument("Invalid number of arguments for request/release.");
+    }
+
+    return vecCommand;
+}
+
+bool Banker::safetyCheck(vector<int> process)
+{
+    bool safe = true;
+
+    if (!safe)
+    {
+        throw invalid_argument("The request/release operation does not pass the safety check.");
+    }
+
+    return safe;
 }

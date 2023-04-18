@@ -43,7 +43,7 @@ void terminal(Banker &banker)
     {
         string command = "";
         cout << "$ ";
-        cin >> command;
+        getline(cin, command);
         parseCommand(active, banker, command);
         cout << "\n";
     }
@@ -71,7 +71,22 @@ void parseCommand(bool &active, Banker &banker, string command)
     }
     else if (command == "*")
     {
-        cout << "\n" << banker.getBankInfo();
+        cout << "\n"
+             << banker.getBankInfo();
+    }
+    else if (command.rfind("RQ", 0) == 0)
+    {
+        try
+        {
+            int result = banker.request_resources(command);
+        }
+        catch (invalid_argument &e)
+        {
+            cout << e.what() << "\n";
+        }
+    }
+    else if (command.rfind("RL", 0) == 0)
+    {
     }
     else
     {
