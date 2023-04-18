@@ -133,31 +133,38 @@ int Banker::request_resources(string command)
     // Handle request, check for validity.
     try
     {
-        int customer = process[0];
-        switch (safetyCheck(process))
+        if (process.size() >= NUMBER_OF_RESOURCES + 1)
         {
-        case SAFE:
-            // The request has been deemed safe. Process by adding to the currently allotted array.
-            process.erase(process.begin());
-            for (int i = 0; i < NUMBER_OF_RESOURCES; i++)
+            int customer = process[0];
+            switch (safetyCheck(process))
             {
-                allocation[customer][i] += process[i];
-                available[i] -= process[i];
+            case SAFE:
+                // The request has been deemed safe. Process by adding to the currently allotted array.
+                process.erase(process.begin());
+                for (int i = 0; i < NUMBER_OF_RESOURCES; i++)
+                {
+                    allocation[customer][i] += process[i];
+                    available[i] -= process[i];
+                }
+                cout << "Customer allocation processed succesfully.\n";
+                break;
+            case SEMISAFE:
+                // The request has been deemed semisafe. Process by adding to the currently allotted array.
+                process.erase(process.begin());
+                for (int i = 0; i < NUMBER_OF_RESOURCES; i++)
+                {
+                    need[customer][i] += process[i];
+                }
+                cout << "Customer allocation greater than maximum. Process added to needed resource queue.\n";
+                break;
+            default:
+                throw invalid_argument("An error has occured.");
+                break;
             }
-            cout << "Customer allocation processed succesfully.\n";
-            break;
-        case SEMISAFE:
-            // The request has been deemed semisafe. Process by adding to the currently allotted array.
-            process.erase(process.begin());
-            for (int i = 0; i < NUMBER_OF_RESOURCES; i++)
-            {
-                need[customer][i] += process[i];
-            }
-            cout << "Customer allocation greater than maximum. Process added to needed resource queue.\n";
-            break;
-        default:
-            throw invalid_argument("An error has occured.");
-            break;
+        }
+        else
+        {
+            throw invalid_argument("Invalid number of arguments for request/release.");
         }
     }
     catch (invalid_argument &e)
@@ -176,11 +183,6 @@ int Banker::release_resources(string command)
     try
     {
         process = splitCommand(command);
-        // Change the resource values to be negative.
-        for (int i = 1; i < NUMBER_OF_RESOURCES + 1; i++)
-        {
-            process[i] = process[i] * -1;
-        }
     }
     catch (invalid_argument &e)
     {
@@ -190,32 +192,45 @@ int Banker::release_resources(string command)
     // Handle request, check for validity.
     try
     {
-        int customer = process[0];
-        switch (safetyCheck(process))
+        if (process.size() >= NUMBER_OF_RESOURCES + 1)
         {
-        case SAFE:
-        case SEMISAFE:
-            // The request has been deemed safe. Process by adding to the currently allotted array.
-            process.erase(process.begin());
-            for (int i = 0; i < NUMBER_OF_RESOURCES; i++)
+            int customer = process[0];
+            // Change the resource values to be negative.
+            for (int i = 1; i < NUMBER_OF_RESOURCES + 1; i++)
             {
-                allocation[customer][i] += process[i];
-                available[i] -= process[i];
-                // Check if the resource is negative. If so, set to 0.
-                if (allocation[customer][i] < 0)
-                {
-                    allocation[customer][i] = 0;
-                }
-                // Check if the available resources is greater than their max. If so, set to their max.
-                if (available[i] > MAX_AVAILABLE[i]) {
-                    available[i] = MAX_AVAILABLE[i];
-                }
+                process[i] = process[i] * -1;
             }
-            cout << "Customer deallocation processed succesfully.\n";
-            break;
-        default:
-            throw invalid_argument("An error has occured.");
-            break;
+            switch (safetyCheck(process))
+            {
+            case SAFE:
+            case SEMISAFE:
+                // The request has been deemed safe. Process by adding to the currently allotted array.
+                process.erase(process.begin());
+                for (int i = 0; i < NUMBER_OF_RESOURCES; i++)
+                {
+                    allocation[customer][i] += process[i];
+                    available[i] -= process[i];
+                    // Check if the resource is negative. If so, set to 0.
+                    if (allocation[customer][i] < 0)
+                    {
+                        allocation[customer][i] = 0;
+                    }
+                    // Check if the available resources is greater than their max. If so, set to their max.
+                    if (available[i] > MAX_AVAILABLE[i])
+                    {
+                        available[i] = MAX_AVAILABLE[i];
+                    }
+                }
+                cout << "Customer deallocation processed succesfully.\n";
+                break;
+            default:
+                throw invalid_argument("An error has occured.");
+                break;
+            }
+        }
+        else
+        {
+            throw invalid_argument("Invalid number of arguments for request/release.");
         }
     }
     catch (invalid_argument &e)
@@ -242,12 +257,13 @@ vector<int> Banker::splitCommand(string command)
     }
 
     // Check if this is a valid customer id.
-    if (vecCommand[0] > NUMBER_OF_CUSTOMERS - 1) {
+    if (vecCommand.size() != 0 && vecCommand[0] > NUMBER_OF_CUSTOMERS - 1)
+    {
         throw invalid_argument("Invalid customer ID.");
     }
 
     // Check if this is a valid number of resources.
-    if (vecCommand.size() != (NUMBER_OF_RESOURCES + 1))
+    if (vecCommand.size() != 0 && vecCommand.size() != (NUMBER_OF_RESOURCES + 1))
     {
         throw invalid_argument("Invalid number of arguments for request/release.");
     }
@@ -273,7 +289,7 @@ Banker::SafetyStatus Banker::safetyCheck(vector<int> process)
             break;
         }
         // Check if the request in addition to the current allocation
-        // is less than the maximum demand from the customer, and that it is 
+        // is less than the maximum demand from the customer, and that it is
         // less than the total available of that resource.
         if (process[i] + allocation[customer][i] > maximum[customer][i] || process[i] + allocation[customer][i] > available[i])
         {
