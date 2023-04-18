@@ -29,6 +29,7 @@ private:
     Banker::SafetyStatus safetyCheck(vector<int> process);
     /* the available amount of each resource */
     int available[NUMBER_OF_RESOURCES];
+    int MAX_AVAILABLE[NUMBER_OF_RESOURCES];
     /*the maximum demand of each customer */
     int maximum[NUMBER_OF_CUSTOMERS][NUMBER_OF_RESOURCES];
     /* the amount currently allocated to each customer */

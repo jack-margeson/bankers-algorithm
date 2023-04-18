@@ -87,6 +87,14 @@ void parseCommand(bool &active, Banker &banker, string command)
     }
     else if (command.rfind("RL", 0) == 0)
     {
+        try
+        {
+            int result = banker.release_resources(command);
+        }
+        catch (invalid_argument &e)
+        {
+            cout << e.what() << "\n";
+        }
     }
     else
     {
